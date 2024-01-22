@@ -1,6 +1,9 @@
 import Mathlib.Algebra.Lie.Basic
 import Mathlib.Algebra.Lie.Semisimple
 import Mathlib.Algebra.Lie.Submodule
+import Mathlib.Algebra.Lie.DirectSum
+import Mathlib.Algebra.Lie.Killing
+import Mathlib.Algebra.DirectSum.Decomposition
 
 import Mathlib.LinearAlgebra.GeneralLinearGroup
 import Mathlib.LinearAlgebra.FiniteDimensional
@@ -80,9 +83,11 @@ variable {K : Type*} [CommRing K]
 
 variable (φ : Representation K L V)
 
+
 section Module
 
 def asLieModule (_ : Representation K L V) := V
+
 
 instance : AddCommGroup (asLieModule φ) := inferInstanceAs <| AddCommGroup V
 
@@ -108,6 +113,10 @@ instance : LieModule K L (asLieModule φ) where
 
 variable {φ : Representation K L V}
 variable (f : V →ₗ[K] V) (commute : ∀ x : L, f ∘ₗ φ x = φ x ∘ₗ f)
+
+example (k : K) (v : V) : k • (φ.asLieModuleEquiv v) = φ.asLieModuleEquiv (k • v) := by
+  rw [LinearEquiv.map_smul]
+
 
 def kernel : LieSubmodule K L φ.asLieModule where
   carrier := { v | f v = 0 }
@@ -161,15 +170,14 @@ variable {K : Type*} [Field K] [IsAlgClosed K]
 
 open Representation
 
-variable (φ : Representation K L V)
+variable {φ : Representation K L V}
 
-abbrev Vᵣ := φ.asLieModule
 
 variable [FiniteDimensional K (asLieModule φ)] [Nontrivial (asLieModule φ)]
 
 lemma Schur  (h0 : IsIrreducible φ) :
-(f : φ.asLieModule →ₗ[K] φ.asLieModule) → (∀ x : L, f ∘ₗ φ x = φ x ∘ₗ f)
-→ ∃ (c : K), ∀ (v : φ.asLieModule), f v = c • v := by
+(f : φ.asLieModule →ₗ[K] φ.asLieModule) → (∀ x : L, f ∘ₗ φ x = φ x ∘ₗ f) →
+  (∃ (c : K), ∀ v : φ.asLieModule, f v = c • v) := by
   intro f hf
   have : ∃ (c : K), ∃ (v : V), v ≠ 0 ∧ f v = c • v := by
     rcases Module.End.exists_eigenvalue f with ⟨c, hc⟩
@@ -207,9 +215,31 @@ lemma Schur  (h0 : IsIrreducible φ) :
 
 
 variable (V : Type*) [AddCommGroup V] [Module K V]
+variable [FiniteDimensional K V] [Nontrivial V]
+
+open scoped DirectSum
+
+variable {ι : Type*} [DecidableEq ι] [Fintype ι]
+variable {L : Type w} [LieRing L] [LieAlgebra K L]
+variable (I : Fin t → LieIdeal K L)
+
+instance : LieAlgebra K (⨁ i, I i) := DirectSum.lieAlgebra fun i => ↥(I i)
+
+#check (⨁ i, I i)
+variable (j : Fin t)
+#check LieIdeal.killingCompl K L (I j)
+
+theorem killing_compl_ideal_eq_top (I : LieIdeal K L) : (I ⊔ LieIdeal.killingCompl K L I) = ⊤ := by sorry
+
+theorem killing_compl_ideal_eq_top' (I : LieIdeal K L) : (I ⊓ LieIdeal.killingCompl K L I) = ⊥ := by sorry
+
+theorem decomp_of_semisimple (hsemisimple : LieAlgebra.IsSemisimple K L) :
+  ∃ (I : Fin t → LieIdeal K L),
+  (∀ i, LieAlgebra.IsSimple K (I i)) ∧ (Nonempty (DirectSum.Decomposition I)) := by sorry
+
+
 
 def Trace (x : V →ₗ[K] V) : ℝ := sorry
-
 
 
 lemma triv_1dim_of_semisimplicity (φ : Representation K L V)
