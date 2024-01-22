@@ -1,0 +1,8 @@
+{
+    "files.exclude": {
+        "{**.lake/packages/mathlib/MathlibExtras/**,**.lake/packages/mathlib/*.lean}": true,
+        "**.lake/lakefile**": true,
+        "**.lake/packages/[!m]**": true,
+        "**.lake/packages/mathlib/[!M]**": true
+    }
+}
