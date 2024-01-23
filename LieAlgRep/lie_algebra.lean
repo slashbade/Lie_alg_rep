@@ -119,7 +119,6 @@ variable (f : V →ₗ[K] V) (commute : ∀ x : L, f ∘ₗ φ x = φ x ∘ₗ f
 example (k : K) (v : V) : k • (φ.asLieModuleEquiv v) = φ.asLieModuleEquiv (k • v) := by
   rw [LinearEquiv.map_smul]
 
-
 def kernel : LieSubmodule K L φ.asLieModule where
   carrier := { v | f v = 0 }
   zero_mem' := by simp
@@ -146,6 +145,8 @@ variable [LieRingModule L M] [LieModule K L M]
 variable (N : Type*) [AddCommGroup N] [Module K N]
 variable [LieRingModule L N] [LieModule K L N]
 
+#check LieRingModule.toBracket
+
 -- A Lie module homomorphism is a LieRingModule
 instance lie_ring_module_of_lie_hom : LieRingModule L (M →ₗ⁅K,L⁆ N) where
   bracket := fun x f =>
@@ -166,46 +167,14 @@ instance lie_module_of_lie_hom : LieModule K L (M →ₗ⁅K,L⁆ N) where
   lie_smul := by
     intro k x f; ext; simp [Bracket.bracket]
 
+
+
+
 -- variable (N' : Type) [AddCommGroup N'] [Module K N']
 -- variable [LieRingModule L N']
-
+@[simp]
 lemma lie_module_of_lie_hom_apply (x : L) (f : M →ₗ⁅K,L⁆ N) (v : M) :
   ⁅x, f⁆ v = ⁅x, f v⁆ - f ⁅x, v⁆ := rfl
-
-
-
-variable {K : Type*} [CommRing K]
-variable {L : Type*} [LieRing L] [LieAlgebra K L]
-variable {M : Type*} [AddCommGroup M] [Module K M]
-variable [LieRingModule L M] [LieModule K L M]
-
-
-
-lemma lie_submodule_of_subspace_res_scalar (x : L) (N' : LieSubmodule K L M)
-  (f : M →ₗ⁅K,L⁆ N') :
-  LieSubmodule K L (M →ₗ⁅K,L⁆ N') where
-  carrier := {f | ∀ (n : N'), ∃ (k : K), (f.domRestrict N') n = k • (@LinearMap.id K N') n}
-  add_mem' := by
-    simp; intro f1 f2 hf1 hf2 a ha;
-    rcases hf1 a ha with ⟨k1, h1⟩
-    rcases hf2 a ha with ⟨k2, h2⟩
-    use k1+k2
-    sorry
-
-  zero_mem' := sorry
-  smul_mem' := sorry
-  lie_mem := sorry
-
-lemma lie_submodule_of_subspace_res_zero (x : L) (N' : LieSubmodule K L M)
-  (f : M →ₗ⁅K,L⁆ N') :
-  LieSubmodule K L (M →ₗ⁅K,L⁆ N') where
-  carrier := {f | ∀ (n : N'), (f.domRestrict N') n = 0}
-  add_mem' := by
-    simp; intro f1 f2 hf1 hf2 a ha;
-    sorry
-  zero_mem' := sorry
-  smul_mem' := sorry
-  lie_mem := sorry
 
 
 end Module
@@ -228,7 +197,7 @@ class IsIrreducible (φ : Representation K L V) : Prop where
 
 class IsCompletelyReducible (φ : Representation K L V) : Prop where
   CompletelyReducible : ∀ W : LieSubmodule K L φ.asLieModule, ∃ W' : LieSubmodule K L φ.asLieModule,
-    W + W' = ⊤ ∧ W ⊓ W' = ⊥
+    (W ⊕ W') = (⊤ : LieSubmodule K L φ.asLieModule)
 
 end Reducibility
 
@@ -325,27 +294,87 @@ theorem ad_eq_self_of_semisimple (hsemisimple : LieAlgebra.IsSemisimple K L) :
   ⁅(⊤ : LieIdeal K L), (⊤ : LieIdeal K L)⁆ = (⊤ : LieIdeal K L) := by sorry
 
 
+
+
+
+
+variable {K : Type*} [CommRing K]
+variable {L : Type*} [LieRing L] [LieAlgebra K L]
+variable {V : Type*} [AddCommGroup V] [Module K V]
+
+
 def Trace (x : V →ₗ[K] V) : ℝ := sorry
 
 
-variable (V : Type*) [AddCommGroup V] [Module K V] [FiniteDimensional K V] [Nontrivial V]
 variable [LieRingModule L V] [LieModule K L V]
-def Codimension  (W : LieSubmodule K L V) : ℕ := sorry
+def Codimension (W': LieSubmodule K L V)(W : LieSubmodule K L V) : ℕ := sorry
 
+variable {V : Type*} [AddCommGroup V] [Module K V]
 lemma triv_1dim_of_semisimplicity (φ : Representation K L V)
   (hsemisimple : LieAlgebra.IsSemisimple K L) :
-  ∀ x : L, (Trace V) (φ x) = 0 := by sorry
+  ∀ x : L, Trace (φ x) = 0 := by sorry
+
+section Weyl
+
+variable (K : Type*) [CommRing K]
+variable (L : Type*) [LieRing L] [LieAlgebra K L]
+variable (M : Type*) [AddCommGroup M] [Module K M]
+variable [LieRingModule L M] [LieModule K L M]
+variable (N' : LieSubmodule K L M)
 
 
-variable {K : Type*} [Field K]
-  {L : Type*} [LieRing L] [LieAlgebra K L]
-  {V : Type*} [AddCommGroup V] [Module K V] [LieRingModule L V]
+abbrev LieModuleHomResScalar :
+  LieSubmodule K L (M →ₗ⁅K,L⁆ N') where
+  carrier := {f | ∀ (n : N'), ∃ (k : K), (f.domRestrict N') n = k • (@LinearMap.id K N') n}
+  add_mem' := by
+    simp; intro f1 f2 hf1 hf2 a ha;
+    rcases hf1 a ha with ⟨k1, h1⟩
+    rcases hf2 a ha with ⟨k2, h2⟩
+    use k1 + k2
+    rw [Pi.add_apply, h1, h2, add_smul]
+  zero_mem' := by
+    simp; intro n b; use 0; simp
+  smul_mem' := by
+    simp; intro k f hh m b;
+    rcases hh m b with ⟨k', h⟩
+    use k' * k;
+    simp [h, smul_smul, mul_comm]
+  lie_mem := by
+    simp; intros; use 0; rw [zero_smul]
 
-lemma lie_submodule_of_subspace_res_scalar (W : LieSubmodule K L V) : true := by sorry
 
-theorem Weyl (ϕ : Representation K L V) (hsemisimple : LieAlgebra.IsSemisimple K L) :
-  Representation.IsCompletelyReducible ϕ := by
-  have case_codim_one (W : LieSubmodule K L ϕ.asLieModule) (h :Codimension ϕ.asLieModule W = 1):
-     (∃ (X : LieSubmodule K L ϕ.asLieModule), W + X = ⊤ ∧ W ⊓ X = ⊥ ) := by sorry
-  have gen_case_reduce_to_codim_one (W : LieSubmodule K L ϕ.asLieModule) (𝒱 : W →ₗ⁅K,L⁆ ϕ.asLieModule):
-    (∃ (𝒳 : LieSubmodule K L ϕ.asLieModule), W + X = ⊤ ∧ W ⊓ X = ⊥ ) := by sorry
+abbrev LieModuleHomResZero:
+  LieSubmodule K L (M →ₗ⁅K,L⁆ N') where
+  carrier := {f | ∀ (n : N'), (f.domRestrict N') n = 0}
+  add_mem' := by
+    simp; intro f1 f2 hf1 hf2 a ha;
+    rw [Pi.add_apply, hf1 a ha, hf2 a ha, add_zero]
+  zero_mem' := by simp;
+  smul_mem' := by simp; intro k f hh m b; simp [hh m b]
+  lie_mem := by simp;
+
+variable {K : Type*} [CommRing K]
+variable {L : Type*} [LieRing L] [LieAlgebra K L]
+variable {V : Type*} [AddCommGroup V] [Module K V] [LieRingModule L V]
+
+lemma has_compl_of_codim_one (W : LieSubmodule K L V) (W' : LieSubmodule K L V)
+  (h : Codimension W' W = 1):
+  (∃ (X : LieSubmodule K L V), (W ⊕ X) = W') := by sorry
+
+theorem Weyl (φ : Representation K L V) (hsemisimple : LieAlgebra.IsSemisimple K L) :
+  IsCompletelyReducible φ := by
+  constructor
+  intro W
+  let 𝒱 := LieModuleHomResScalar K L φ.asLieModule W
+  let 𝒲 := LieModuleHomResZero K L φ.asLieModule W
+  have : Codimension 𝒱 𝒲 = 1 := by sorry
+  rcases has_compl_of_codim_one 𝒱 𝒲 this with ⟨𝒳, h𝒳⟩
+  have : ∃ (f : φ.asLieModule →ₗ⁅K,L⁆ W),(f ∈ 𝒳) ∧  ∀ (w : W), f w = w := by sorry
+  rcases this with ⟨f, ⟨hf, hf'⟩⟩
+  have : (W ⊕ f.ker) = (⊤ : LieSubmodule K L φ.asLieModule) := by sorry
+  use f.ker
+
+
+
+
+end Weyl
