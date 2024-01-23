@@ -3,6 +3,8 @@ import Mathlib.Algebra.Lie.Semisimple
 import Mathlib.Algebra.Lie.Submodule
 import Mathlib.Algebra.Lie.DirectSum
 import Mathlib.Algebra.Lie.Killing
+import Mathlib.Algebra.Lie.OfAssociative
+
 import Mathlib.Algebra.DirectSum.Decomposition
 
 import Mathlib.LinearAlgebra.GeneralLinearGroup
@@ -138,8 +140,77 @@ def kernel : LieSubmodule K L φ.asLieModule where
 theorem mem_kernel (v : φ.asLieModule) : v ∈ φ.kernel f commute ↔ f v = 0 := by
   simp [kernel]
 
+variable (M : Type*) [AddCommGroup M] [Module K M]
+variable [LieRingModule L M] [LieModule K L M]
+
+variable (N : Type*) [AddCommGroup N] [Module K N]
+variable [LieRingModule L N] [LieModule K L N]
+
+-- A Lie module homomorphism is a LieRingModule
+instance lie_ring_module_of_lie_hom : LieRingModule L (M →ₗ⁅K,L⁆ N) where
+  bracket := fun x f =>
+    LieModuleHom.mk
+      (LinearMap.mk
+        (AddHom.mk (fun v => ⁅x, f v⁆ - f ⁅x, v⁆) (by intro v w; simp only [LieModuleHom.map_add,
+          lie_add, LieModuleHom.map_lie, sub_self, add_zero];))
+        (by simp only [LieModuleHom.map_smul, lie_smul, LieModuleHom.map_lie, sub_self,
+          RingHom.id_apply, smul_zero, forall_const];))
+      (by simp only [LieModuleHom.map_lie, sub_self, lie_zero, forall_const])
+  lie_add := by intro x f1 f2; ext; simp [Bracket.bracket]
+  add_lie := by intro x1 x2 f; ext; simp [Bracket.bracket]
+  leibniz_lie := by intro x y f; ext; simp [Bracket.bracket]
+
+instance lie_module_of_lie_hom : LieModule K L (M →ₗ⁅K,L⁆ N) where
+  smul_lie := by
+    intro k x f; ext; simp [Bracket.bracket]
+  lie_smul := by
+    intro k x f; ext; simp [Bracket.bracket]
+
+-- variable (N' : Type) [AddCommGroup N'] [Module K N']
+-- variable [LieRingModule L N']
+
+lemma lie_module_of_lie_hom_apply (x : L) (f : M →ₗ⁅K,L⁆ N) (v : M) :
+  ⁅x, f⁆ v = ⁅x, f v⁆ - f ⁅x, v⁆ := rfl
+
+
+
+variable {K : Type*} [CommRing K]
+variable {L : Type*} [LieRing L] [LieAlgebra K L]
+variable {M : Type*} [AddCommGroup M] [Module K M]
+variable [LieRingModule L M] [LieModule K L M]
+
+
+
+lemma lie_submodule_of_subspace_res_scalar (x : L) (N' : LieSubmodule K L M)
+  (f : M →ₗ⁅K,L⁆ N') :
+  LieSubmodule K L (M →ₗ⁅K,L⁆ N') where
+  carrier := {f | ∀ (n : N'), ∃ (k : K), (f.domRestrict N') n = k • (@LinearMap.id K N') n}
+  add_mem' := by
+    simp; intro f1 f2 hf1 hf2 a ha;
+    rcases hf1 a ha with ⟨k1, h1⟩
+    rcases hf2 a ha with ⟨k2, h2⟩
+    use k1+k2
+    sorry
+
+  zero_mem' := sorry
+  smul_mem' := sorry
+  lie_mem := sorry
+
+lemma lie_submodule_of_subspace_res_zero (x : L) (N' : LieSubmodule K L M)
+  (f : M →ₗ⁅K,L⁆ N') :
+  LieSubmodule K L (M →ₗ⁅K,L⁆ N') where
+  carrier := {f | ∀ (n : N'), (f.domRestrict N') n = 0}
+  add_mem' := by
+    simp; intro f1 f2 hf1 hf2 a ha;
+    sorry
+  zero_mem' := sorry
+  smul_mem' := sorry
+  lie_mem := sorry
+
 
 end Module
+
+
 
 
 
@@ -213,6 +284,21 @@ lemma Schur  (h0 : IsIrreducible φ) :
     _ = 0 := by simp [this]
 
 
+-- Deprecated
+section LieSubalgebra
+
+variable {K : Type*} [Field K] [IsAlgClosed K]
+  {L : Type*} [LieRing L] [LieAlgebra K L]
+
+instance HasBracket : Bracket (LieSubalgebra K L) (LieSubalgebra K L) where
+  bracket := fun s1 s2 =>
+  LieSubalgebra.lieSpan K L {m | ∃ (x : s1) (y : s2), ⁅(x : L), (y : L)⁆ = m}
+
+
+
+end LieSubalgebra
+
+
 
 variable (V : Type*) [AddCommGroup V] [Module K V]
 variable [FiniteDimensional K V] [Nontrivial V]
@@ -225,31 +311,41 @@ variable (I : Fin t → LieIdeal K L)
 
 instance : LieAlgebra K (⨁ i, I i) := DirectSum.lieAlgebra fun i => ↥(I i)
 
-#check (⨁ i, I i)
-variable (j : Fin t)
-#check LieIdeal.killingCompl K L (I j)
 
-theorem killing_compl_ideal_eq_top (I : LieIdeal K L) : (I ⊔ LieIdeal.killingCompl K L I) = ⊤ := by sorry
+theorem killing_compl_ideal_eq_top (I : LieIdeal K L) :
+  (I ⊔ LieIdeal.killingCompl K L I) = ⊤ ∧ (I ⊓ LieIdeal.killingCompl K L I) = ⊥ := by sorry
 
-theorem killing_compl_ideal_eq_top' (I : LieIdeal K L) : (I ⊓ LieIdeal.killingCompl K L I) = ⊥ := by sorry
 
 theorem decomp_of_semisimple (hsemisimple : LieAlgebra.IsSemisimple K L) :
   ∃ (I : Fin t → LieIdeal K L),
-  (∀ i, LieAlgebra.IsSimple K (I i)) ∧ (Nonempty (DirectSum.Decomposition I)) := by sorry
+  (∀ i, LieAlgebra.IsSimple K (I i)) ∧ (Nonempty (DirectSum.Decomposition I)) := by
+  sorry
 
+theorem ad_eq_self_of_semisimple (hsemisimple : LieAlgebra.IsSemisimple K L) :
+  ⁅(⊤ : LieIdeal K L), (⊤ : LieIdeal K L)⁆ = (⊤ : LieIdeal K L) := by sorry
 
 
 def Trace (x : V →ₗ[K] V) : ℝ := sorry
 
+
+variable (V : Type*) [AddCommGroup V] [Module K V] [FiniteDimensional K V] [Nontrivial V]
+variable [LieRingModule L V] [LieModule K L V]
+def Codimension  (W : LieSubmodule K L V) : ℕ := sorry
 
 lemma triv_1dim_of_semisimplicity (φ : Representation K L V)
   (hsemisimple : LieAlgebra.IsSemisimple K L) :
   ∀ x : L, (Trace V) (φ x) = 0 := by sorry
 
 
-variable {K : Type*} [CommRing K]
+variable {K : Type*} [Field K]
   {L : Type*} [LieRing L] [LieAlgebra K L]
   {V : Type*} [AddCommGroup V] [Module K V] [LieRingModule L V]
 
+lemma lie_submodule_of_subspace_res_scalar (W : LieSubmodule K L V) : true := by sorry
+
 theorem Weyl (ϕ : Representation K L V) (hsemisimple : LieAlgebra.IsSemisimple K L) :
-  Representation.IsCompletelyReducible ϕ := by sorry
+  Representation.IsCompletelyReducible ϕ := by
+  have case_codim_one (W : LieSubmodule K L ϕ.asLieModule) (h :Codimension ϕ.asLieModule W = 1):
+     (∃ (X : LieSubmodule K L ϕ.asLieModule), W + X = ⊤ ∧ W ⊓ X = ⊥ ) := by sorry
+  have gen_case_reduce_to_codim_one (W : LieSubmodule K L ϕ.asLieModule) (𝒱 : W →ₗ⁅K,L⁆ ϕ.asLieModule):
+    (∃ (𝒳 : LieSubmodule K L ϕ.asLieModule), W + X = ⊤ ∧ W ⊓ X = ⊥ ) := by sorry

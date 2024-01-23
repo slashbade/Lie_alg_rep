@@ -1,4 +1,4 @@
 import Mathlib.Data.Nat.Prime
+import Mathlib.Tactic.GCongr
 
-variable (p q : ℕ)
-example (h : ↑p ∣ ↑q - ↑1) (hn : ¬p ∣ q - 1 ) : false := by contradiction
+def life_decieves_you : Prop := sorry
