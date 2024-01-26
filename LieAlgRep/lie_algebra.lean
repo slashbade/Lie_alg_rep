@@ -611,7 +611,4 @@ theorem Weyl (φ : Representation K L V) (hsemisimple : LieAlgebra.IsSemisimple 
   have : (W ⊕ (f.1.1.ker)) = (⊤ : LieSubmodule K L φ.asLieModule) := by sorry
   use (f : φ.asLieModule →ₗ⁅K, L⁆ W).ker
 
-
-
-
 end Weyl
