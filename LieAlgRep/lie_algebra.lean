@@ -502,17 +502,17 @@ variable (I : Fin t → LieIdeal K L)
 instance : LieAlgebra K (⨁ i, I i) := DirectSum.lieAlgebra fun i => ↥(I i)
 
 
-theorem killing_compl_ideal_eq_top (I : LieIdeal K L) :
-  (I ⊕ LieIdeal.killingCompl K L I) = (⊤ : LieIdeal K L) := by sorry
+-- theorem killing_compl_ideal_eq_top (I : LieIdeal K L) :
+--   (I ⊕ LieIdeal.killingCompl K L I) = (⊤ : LieIdeal K L) := by sorry
 
 
-theorem decomp_of_semisimple (hsemisimple : LieAlgebra.IsSemisimple K L) :
-  ∃ (I : Fin t → LieIdeal K L),
-  (∀ i, LieAlgebra.IsSimple K (I i)) ∧ (Nonempty (DirectSum.Decomposition I)) := by
-  sorry
+-- theorem decomp_of_semisimple (hsemisimple : LieAlgebra.IsSemisimple K L) :
+--   ∃ (I : Fin t → LieIdeal K L),
+--   (∀ i, LieAlgebra.IsSimple K (I i)) ∧ (Nonempty (DirectSum.Decomposition I)) := by
+--   sorry
 
-theorem ad_eq_self_of_semisimple (hsemisimple : LieAlgebra.IsSemisimple K L) :
-  ⁅(⊤ : LieIdeal K L), (⊤ : LieIdeal K L)⁆ = (⊤ : LieIdeal K L) := by sorry
+-- theorem ad_eq_self_of_semisimple (hsemisimple : LieAlgebra.IsSemisimple K L) :
+--   ⁅(⊤ : LieIdeal K L), (⊤ : LieIdeal K L)⁆ = (⊤ : LieIdeal K L) := by sorry
 
 end
 
@@ -536,9 +536,9 @@ variable (v : Basis n K V)
 
 noncomputable def Trace (f : V →ₗ[K] V) : K := LinearMap.toMatrix v v f |>.trace
 
-lemma triv_1dim_of_semisimplicity (φ : Representation K L V)
-  (hsemisimple : LieAlgebra.IsSemisimple K L) :
-  ∀ x : L, Trace v (φ x) = 0 := by sorry
+-- lemma triv_1dim_of_semisimplicity (φ : Representation K L V)
+--   (hsemisimple : LieAlgebra.IsSemisimple K L) :
+--   ∀ x : L, Trace v (φ x) = 0 := by sorry
 
 end
 
