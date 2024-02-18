@@ -37,32 +37,6 @@ abbrev Representation :=
 
 end
 
-section GeneralLinear
-
-variable (K : Type*) [Field K]
-  (L : Type*) [LieRing L] [LieAlgebra K L]
-  (V : Type*) [AddCommGroup V] [Module K V]
-
-instance : LieRing (V →ₗ[K] V) where
-  bracket := fun f g => f ∘ₗ g - g ∘ₗ f
-  lie_add := by
-    simp [add_comp, comp_add]
-    intro x y z; abel;
-  add_lie := by
-    simp [add_comp, comp_add]
-    intro x y z; abel;
-  lie_self := by simp
-  leibniz_lie := by
-    simp [sub_comp, comp_sub, comp_assoc]
-    intro x y z; abel;
-
-instance : LieAlgebra K (V →ₗ[K] V) where
-  lie_smul := by simp
-
-end GeneralLinear
-
-section
-
 variable {ι : Type*}
 {K : Type*} [Field K]
 {L : Type*} [LieRing L] [Module K L] [LieAlgebra K L]
@@ -126,5 +100,3 @@ lemma CasimirIntertwin (B : BilinForm K L) (φ : Representation K L V) (BasisL :
   have CasimirCommute : ⁅φ l, cphi⁆ = 0 := by sorry
   rw [comm_zero_bracket] at CasimirCommute
   assumption
-
-end
